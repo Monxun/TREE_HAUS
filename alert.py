@@ -14,6 +14,8 @@ import requests
 # CRYPTO EXCHANGE DATA
 exchange = ccxt.binance()
 
+symbol = 'ETH/USDT'
+
 bars = exchange.fetch_ohlcv('ETH/USDT', timeframe='5m', limit=500)
 
 df = pd.DataFrame(bars, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
@@ -41,16 +43,16 @@ WEBHOOK_URL = ""
 if last_row['ADX_14'] >= 25:
     
     if last_row['DMP_14'] > last_row['DMN_14']:
-        message = f"STRONG UPTREND!!! The ADX is {last_row['ADX_14']:.2f}"
+        message = f"STRONG UPTREND!!! The ADX for {symbol} is {last_row['ADX_14']:.2f} +DI {last_row['DMP_14']} -DI {last_row['DMN_14']}"
         print(message)
         
     if last_row['DMN_14'] > last_row['DMP_14']:
-        message = f"STRONG DOWNTREND!!! The ADX is {last_row['ADX_14']:.2f}"
+        message = f"STRONG DOWNTREND!!! The ADX for {symbol} is {last_row['ADX_14']:.2f} +DI {last_row['DMP_14']} -DI {last_row['DMN_14']}"
         print(message)
         
     
 if last_row['ADX_14'] < 25:
-    message = f"NO TREND: The ADX is {last_row['ADX_14']:.2f}"
+    message = f"NO TREND: The ADX for {symbol} is {last_row['ADX_14']:.2f} +DI {last_row['DMP_14']} -DI {last_row['DMN_14']}"
     print(message)
     
     
