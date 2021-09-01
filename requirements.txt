@@ -6,4 +6,6 @@ streamlit
 matplotlib
 plotly
 requests
+streamlit
 TA-Lib
+plotly
