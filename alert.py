@@ -34,7 +34,7 @@ df = pd.concat([df, adx, macd, rsi], axis=1)
 
 last_row = df.iloc[-1]
 
-WEBHOOK_URL = ""
+WEBHOOK_URL = "https://discord.com/api/webhooks/882174665630564402/aPfs_WNWQshlfgcvY_Da00ZzokL3GdN4-LlpYdpKCEncEm2oWIMBRMZAZxNxNOIi0Zcs"
 
 
 
