@@ -11,37 +11,72 @@ symbol=''
 
 # METHODS ##########################################################
 ####################################################################
+# GET INDICATORS FUNCTION
+
+def get_indicators(indicator_que, df):
+
+    indicators_dispatcher = {
+        'adx': df.ta.adx,
+        'macd': df.ta.macd,
+        'rsi': df.ta.rsi
+    }
+
+    for i in indicator_que:
+        indicator = indicators_dispatcher[i]()
+        df = pd.concat([df, indicator], axis=1)
+
+    df = df.dropna() # optional 
+
+    return df
+
+    
+####################################################################
 # CRYPTO EXCHANGE DATA FUNCTION
+
 def crypto(symbol=symbol, timeframe='5m', limit=500):
 
     exchange = ccxt.binance()
 
     bars = exchange.fetch_ohlcv(f'{symbol}', timeframe=timeframe, limit=limit)
 
-    df_crypto = pd.DataFrame(bars, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
+    df_crypto = pd.DataFrame(bars, columns=['time', 'open', 'high', 'low', 'close', 'volume']) ### TODO!!!!! CONVERT TIME to DATETIME OR SOMETHING ELSE USABLE
+ 
 
+    #CHARTS
     fig = go.Figure()
     fig.add_trace(go.Candlestick(x=df_crypto['time'], open=df_crypto['open'], high=df_crypto['high'], low=df_crypto['low'], close=df_crypto['close']))
 
     st.plotly_chart(fig)
+
+    #INDICATORS
+    indicator_que = [key for key in indicator_flags if key]
+    df_crypto = get_indicators(indicator_que, df=df_crypto)
+    # get_indicators(indicator_que, df=df_crypto)
     st.dataframe(df_crypto)
 
+    last_row = df_crypto.iloc[-1]
+
+    st.write(last_row)
 
 ####################################################################
 # STOCK EXCHANGE DATA FUNCTION
+
 def stock(symbol=symbol, period="1y"):
 
     ticker = yfinance.Ticker(f"{symbol}")
     df_stock = ticker.history(period=period)
 
-    # fig = go.Figure()
-    # fig.add_trace(go.Candlestick(x=df_stock['DateTime'], open=df_stock['Open'], high=df_stock['High'], low=df_stock['Low'], close=df_stock['Close']))
+    #CHARTS
+    st.line_chart(df_stock)
 
-    # st.plotly_chart(fig)
-
+    #INDICATORS
+    indicator_que = [key for key in indicator_flags if key]
+    df_stock = get_indicators(indicator_que, df=df_stock)
     st.dataframe(df_stock)
 
+    last_row = df_crypto.iloc[-1]
 
+    st.write(last_row)
 
 # GUI ##############################################################
 ####################################################################
@@ -52,16 +87,16 @@ st.sidebar.image('logo.png')
 st.sidebar.title("TREE_HAUS")
 st.sidebar.write("by: monxun")
 
-screen_type = st.sidebar.radio('PHASE', ["KRONOS - recon","ORIKLE - forecasting", "HERMEZ - trading AI"])
+screen_type = st.sidebar.radio('', ["KRONOS - recon","ORIKLE - forecasting", "HERMEZ - trading AI"])
 
 st.sidebar.write('-' * 40)
 
 
 #KRONOS############################################################
 if "KRONOS" in screen_type:
+    
+    screen = st.sidebar.selectbox("", ('Analysis', 'Backtesting', 'Strategy', 'Twitter', 'Sentiment', '--select--'), index=5)
 
-    screen = st.sidebar.selectbox("View", ('Analysis', 'Backtesting', 'Strategy', 'Twitter', 'Sentiment', '--select--'), index=5)
-    st.sidebar.write('-' * 40)
 
     ###############################################################
     # BACKGROUND IMAGES
@@ -85,8 +120,7 @@ if "KRONOS" in screen_type:
 #ORIKLE############################################################
 elif "ORIKLE" in screen_type:
 
-    screen = st.sidebar.selectbox("View", ('ML', 'AI', 'Auto_ML', 'Time-Series Pipeline', 'Sentiment / Data Forecasting', 'AI Enhanced Backtesting'), index=0)
-    st.sidebar.write('-' * 40)
+    screen = st.sidebar.selectbox("View", ('ML', 'AI', 'Auto_ML', 'Time-Series Pipeline', 'Sentiment / Data Forecasting', 'AI Enhanced Backtesting', '--select one--'), index=6)
 
     ###############################################################
     # BACKGROUND IMAGES
@@ -110,8 +144,7 @@ elif "ORIKLE" in screen_type:
 #HERMEZ###########################################################
 elif "HERMEZ" in screen_type:
 
-    screen = st.sidebar.selectbox("View", ('Strategy Selection', 'Deploymnet', 'Performance', 'Network', 'Outlook'), index=0)
-    st.sidebar.write('-' * 40)
+    screen = st.sidebar.selectbox("View", ('Strategy Selection', 'Deploymnet', 'Performance', 'Network', 'Outlook', '--select one--'), index=5)
 
     ##############################################################
     # BACKGROUND IMAGES
@@ -132,18 +165,23 @@ elif "HERMEZ" in screen_type:
         unsafe_allow_html=True
     )
 
-#################################################################
+# KRONOS
+#############################################################################################################################################################################################################################################################################
 # ANALYSIS PARAMETERS
 
 # SIDEBAR
 if screen == 'Analysis':
 
-    st.sidebar.title(screen)
+    st.sidebar.write('-' * 40)
+
+    st.sidebar.subheader(screen)
 
     symbol_type = st.sidebar.radio('type', ["CRYPTO","STOCK"])
 
+    st.sidebar.write('-' * 40)
+    st.sidebar.subheader('Symbol')
+
     if "CRYPTO" in symbol_type:
-        st.sidebar.write("enter currency pair")
         symbol = st.sidebar.text_input('format: XXX/XXX', value='BTC/USDT')
 
     else:
@@ -152,6 +190,10 @@ if screen == 'Analysis':
 
 ################
 # TIME SELECTION
+
+    st.sidebar.write('-' * 40)
+    st.sidebar.subheader('Time')
+
     if "STOCK" in symbol_type:
         time_cursor = st.sidebar.radio('choose:', ["date","period"])
 
@@ -188,55 +230,33 @@ if screen == 'Analysis':
             'rsi': rsi_box
         }
 
-    
-
-
 #################################################################
 # RUN ANALYSIS
     run_flag = st.sidebar.button('RUN')
     while run_flag:
+
         if "CRYPTO" in symbol_type:
             crypto(symbol, timeframe, limit)
-            indicator_que = [i for i in indicator_flags if i == True]
-            st.sidebar.write(indicator_que)
             run_flag=False
 
         elif date_flag:
             stock(symbol, start=timeframe_a, end=timeframe_b, interval=interval)
-            indicator_que = [i for i in indicator_flags if i == True]
-            st.sidebar.write(indicator_que)
             run_flag=False
 
         else:
             stock(symbol, period=timeframe, interval=interval)
-            indicator_que = [i for i in indicator_flags if i == True]
-            st.sidebar.write(indicator_que)
             run_flag=False
 
-#################################################################
 
+#############################################################################################################################################################################################################################################################################
+# Twitter
 
+if screen == 'Twitter':
 
+    # SIDEBAR
+    st.sidebar.write('-' * 40)
+    st.sidebar.subheader('Objective:')
+    st.sidebar.radio('', ['feed', 'backtest', 'copy'])
 
-
-
-    
-###################################################################
-# MAKE GRAPHS / WRITE DATA
-
-
-
-
-###################################################################
-# CRYPTO W/ INDICATORS
-
-# adx = ta.adx(df['high'], df['low'], df['close'])
-
-# adx = df.ta.adx()
-# macd = df.ta.macd()
-# rsi = df.ta.rsi()
-
-# # call 'pd.concat([df, ...]) to combine the indicators to original df
-# df = pd.concat([df, adx, macd, rsi], axis=1)
-
-# last_row = df.iloc[-1]
+    st.sidebar.subheader('Target:')
+    st.sidebar.text_input('username:')
