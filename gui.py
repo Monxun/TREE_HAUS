@@ -47,7 +47,7 @@ def crypto(symbol=symbol, timeframe='5m', limit=500, exchange_name='kraken'):
     bars = exchange.fetch_ohlcv(f'{symbol}', timeframe=timeframe, limit=limit)
 
     df_crypto = pd.DataFrame(bars, columns=['time', 'open', 'high', 'low', 'close', 'volume']) ### TODO!!!!! CONVERT TIME to DATETIME OR SOMETHING ELSE USABLE
- 
+    df_crypto['time'] = pd.to_datetime(df_crypto['time'], unit='ms')
 
     #CHARTS
     fig = go.Figure()
@@ -59,20 +59,20 @@ def crypto(symbol=symbol, timeframe='5m', limit=500, exchange_name='kraken'):
     indicator_que = [key for key in indicator_flags if key]
     df_crypto = get_indicators(indicator_que, df=df_crypto)
     # get_indicators(indicator_que, df=df_crypto)
-    st.dataframe(df_crypto)
+    st.dataframe(df_crypto.head())
 
-    last_row = df_crypto.iloc[-1]
+    # last_row = df_crypto.iloc[-1]
 
-    st.write(last_row)
+
 
 
 ####################################################################
 # STOCK EXCHANGE DATA FUNCTION
 
-def stock(symbol=symbol, period="1y"):
+def stock(symbol=symbol):
 
     ticker = yfinance.Ticker(f"{symbol}")
-    df_stock = ticker.history(period=period)
+    df_stock = ticker.history(period='1y')
 
     #CHARTS
     st.line_chart(df_stock)
@@ -81,10 +81,6 @@ def stock(symbol=symbol, period="1y"):
     indicator_que = [key for key in indicator_flags if key]
     df_stock = get_indicators(indicator_que, df=df_stock)
     st.dataframe(df_stock)
-
-    last_row = df_crypto.iloc[-1]
-
-    st.write(last_row)
 
 
 # GUI ##############################################################
@@ -191,8 +187,9 @@ if screen == 'Analysis':
         symbol_type = st.radio('type', ["CRYPTO","STOCK"])
         st.write('-' * 40)
 
-        st.subheader('Exchange')
-        exchange_name = st.selectbox('', ['kraken', 'binance', 'coinbase'])
+        if symbol_type == 'CRYPTO':
+            st.subheader('Exchange')
+            exchange_name = st.selectbox('', ['kraken', 'binance', 'coinbase'])
 
         st.subheader('Symbol')
         if "CRYPTO" in symbol_type:
@@ -208,23 +205,7 @@ if screen == 'Analysis':
         st.write('-' * 40)
         st.subheader('Time')
 
-        if "STOCK" in symbol_type:
-            time_cursor = st.radio('choose:', ["date","period"])
-
-            date_flag = False
-        else:
-            time_cursor = "timeframe"
-
-        
-        if 'date' in time_cursor and symbol_type == 'STOCK':
-            timeframe_a = st.date_input('start date')
-            timeframe_b = st.date_input('end date')
-            date_flag = True
-
-        else:
-            timeframe = st.selectbox('period', ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y','10y'])
-
-        interval = st.selectbox('interval', ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1hr', '1d', '1wk', '1mo', '3mo'])
+        timeframe = st.selectbox('period', ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y','10y'])
         limit = st.number_input('limit', value=500)
 
         ####################
@@ -255,15 +236,10 @@ if screen == 'Analysis':
         st.title(symbol)
         if "CRYPTO" in symbol_type:
             crypto(symbol, timeframe, limit)
-            run_flag=False
-
-        elif date_flag:
-            stock(symbol, start=timeframe_a, end=timeframe_b, interval=interval)
-            run_flag=False
 
         else:
-            stock(symbol, period=timeframe, interval=interval)
-            run_flag=False
+            stock(symbol)
+
 
 
 #############################################################################################################################################################################################################################################################################
