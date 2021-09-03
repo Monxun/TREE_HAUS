@@ -58,6 +58,7 @@ def crypto(symbol=symbol, timeframe='5m', limit=500):
 
     st.write(last_row)
 
+
 ####################################################################
 # STOCK EXCHANGE DATA FUNCTION
 
@@ -77,6 +78,7 @@ def stock(symbol=symbol, period="1y"):
     last_row = df_crypto.iloc[-1]
 
     st.write(last_row)
+
 
 # GUI ##############################################################
 ####################################################################
@@ -165,76 +167,82 @@ elif "HERMEZ" in screen_type:
         unsafe_allow_html=True
     )
 
+
+
 # KRONOS
 #############################################################################################################################################################################################################################################################################
 # ANALYSIS PARAMETERS
 
-# SIDEBAR
 if screen == 'Analysis':
 
-    st.sidebar.write('-' * 40)
+    col1, col2 = st.columns([2, 3])
 
-    st.sidebar.subheader(screen)
+    with col1:
 
-    symbol_type = st.sidebar.radio('type', ["CRYPTO","STOCK"])
+        st.title(screen)
 
-    st.sidebar.write('-' * 40)
-    st.sidebar.subheader('Symbol')
-
-    if "CRYPTO" in symbol_type:
-        symbol = st.sidebar.text_input('format: XXX/XXX', value='BTC/USDT')
-
-    else:
-        st.sidebar.write("enter stock symbol")
-        symbol = st.sidebar.text_input('format: XXXX', value='GME')
-
-################
-# TIME SELECTION
-
-    st.sidebar.write('-' * 40)
-    st.sidebar.subheader('Time')
-
-    if "STOCK" in symbol_type:
-        time_cursor = st.sidebar.radio('choose:', ["date","period"])
-
-        date_flag = False
-    else:
-        time_cursor = "timeframe"
+        symbol_type = st.radio('type', ["CRYPTO","STOCK"])
+        st.write('-' * 40)
 
     
-    if 'date' in time_cursor and symbol_type == 'STOCK':
-        timeframe_a = st.sidebar.date_input('start date')
-        timeframe_b = st.sidebar.date_input('end date')
-        date_flag = True
+        st.subheader('Symbol')
+        if "CRYPTO" in symbol_type:
+            symbol = st.text_input('format: XXX/XXX', value='BTC/USDT')
 
-    else:
-        timeframe = st.sidebar.selectbox('period', ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y','10y'])
+        else:
+            st.write("enter stock symbol")
+            symbol = st.text_input('format: XXXX', value='GME')
 
-    interval = st.sidebar.selectbox('interval', ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1hr', '1d', '1wk', '1mo', '3mo'])
-    limit = st.sidebar.number_input('limit', value=500)
+        ################
+        # TIME SELECTION
 
-####################
-# INDICATOR CHECKBOX
-    indicator_container = st.sidebar.checkbox('add indicators')
+        st.write('-' * 40)
+        st.subheader('Time')
 
-    if indicator_container:
-        st.sidebar.write('-' * 40)
-        st.sidebar.subheader('select indicators:')
-        adx_box = st.sidebar.checkbox('ADX')
-        macd_box = st.sidebar.checkbox('MACD')
-        rsi_box = st.sidebar.checkbox('RSI')
+        if "STOCK" in symbol_type:
+            time_cursor = st.radio('choose:', ["date","period"])
 
-        indicator_flags = {
-            'adx': adx_box,
-            'macd': macd_box,
-            'rsi': rsi_box
-        }
+            date_flag = False
+        else:
+            time_cursor = "timeframe"
 
-#################################################################
-# RUN ANALYSIS
-    run_flag = st.sidebar.button('RUN')
-    while run_flag:
+        
+        if 'date' in time_cursor and symbol_type == 'STOCK':
+            timeframe_a = st.date_input('start date')
+            timeframe_b = st.date_input('end date')
+            date_flag = True
 
+        else:
+            timeframe = st.selectbox('period', ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y','10y'])
+
+        interval = st.selectbox('interval', ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1hr', '1d', '1wk', '1mo', '3mo'])
+        limit = st.number_input('limit', value=500)
+
+        ####################
+        # INDICATOR CHECKBOX
+
+        with st.expander("Indicators"):
+
+            st.write('-' * 40)
+            st.subheader('select indicators:')
+            adx_box = st.checkbox('ADX')
+            macd_box = st.checkbox('MACD')
+            rsi_box = st.checkbox('RSI')
+
+            indicator_flags = {
+                'adx': adx_box,
+                'macd': macd_box,
+                'rsi': rsi_box
+            }
+
+
+        #################################################################
+        # RUN ANALYSIS
+    
+    with col2:
+
+        st.write('')
+        st.write('')
         if "CRYPTO" in symbol_type:
             crypto(symbol, timeframe, limit)
             run_flag=False
@@ -253,10 +261,97 @@ if screen == 'Analysis':
 
 if screen == 'Twitter':
 
+    import tweepy
+    import config 
+
+    auth = tweepy.OAuthHandler(config.TWITTER_CONSUMER_KEY, config.TWITTER_CONSUMER_SECRET)
+    auth.set_access_token(config.TWITTER_ACCESS_TOKEN, config.TWITTER_ACCESS_TOKEN_SECRET)
+    api = tweepy.API(auth)
+
+    traders_list = list(config.TWITTER_USERNAMES)
+
     # SIDEBAR
     st.sidebar.write('-' * 40)
     st.sidebar.subheader('Objective:')
-    st.sidebar.radio('', ['feed', 'backtest', 'copy'])
+    objective = st.sidebar.radio('', ['feeds', 'backtest'])
 
-    st.sidebar.subheader('Target:')
-    st.sidebar.text_input('username:')
+    
+  
+    if objective == 'feeds':
+
+        col1, col2, col3 = st.columns([4, 5, 4])
+
+        with col1:
+
+            st.title('Target')
+
+            st.subheader('username:')
+            username = st.text_input('', value='ohheytommy')
+
+            user = api.get_user(username)
+            tweets = api.user_timeline(username)
+
+            user_add = st.button('ADD TRADER')
+            if user_add:
+                traders_list = traders_list.append(username)
+
+            st.subheader(username)
+            st.image(user.profile_image_url)
+
+            for tweet in tweets:
+                if '$' in tweet.text:
+                    words = tweet.text.split(' ')
+                    for word in words:
+                        if word.startswith('$') and word[1:].isalpha():
+                            symbol = word[1:]
+                            st.write(symbol)
+                            st.write(tweet.text)
+                            st.image(f"https://finviz.com/chart.ashx?t={symbol}")
+
+        with col2:
+
+            st.title('Traders')
+
+            st.subheader('List')
+
+            st.write('')
+            st.write('')
+            with st.expander("See traders"):
+                for i in traders_list:
+                    st.write(i)
+
+            for username in traders_list:
+                user = api.get_user(username)
+                tweets = api.user_timeline(username)
+
+                st.subheader(username)
+                st.image(user.profile_image_url)
+                
+                for tweet in tweets:
+                    if '$' in tweet.text:
+                        words = tweet.text.split(' ')
+                        for word in words:
+                            if word.startswith('$') and word[1:].isalpha():
+                                symbol = word[1:]
+                                st.write(symbol)
+                                st.write(tweet.text)
+                                st.image(f"https://finviz.com/chart.ashx?t={symbol}")
+
+        with col3:
+
+            st.title('Stocktwits')
+
+            st.subheader('Symbol')
+
+            stock_symbol = st.text_input("", value='GME', max_chars=5)
+
+            r = requests.get(f"https://api.stocktwits.com/api/2/streams/symbol/{stock_symbol}.json")
+
+            data = r.json()
+
+            for message in data['messages']:
+                st.image(message['user']['avatar_url'])
+                st.write(message['user']['username'])
+                st.write(message['created_at'])
+                st.write(message['body'])
+
