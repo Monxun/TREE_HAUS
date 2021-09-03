@@ -33,9 +33,16 @@ def get_indicators(indicator_que, df):
 ####################################################################
 # CRYPTO EXCHANGE DATA FUNCTION
 
-def crypto(symbol=symbol, timeframe='5m', limit=500):
+def crypto(symbol=symbol, timeframe='5m', limit=500, exchange_name='kraken'):
 
-    exchange = ccxt.binance()
+    exchange_dict = {
+
+        'kraken': ccxt.kraken,
+        'binance': ccxt.binance,
+        'coinbase': ccxt.coinbase
+    }
+
+    exchange = exchange_dict[exchange_name]()
 
     bars = exchange.fetch_ohlcv(f'{symbol}', timeframe=timeframe, limit=limit)
 
@@ -184,7 +191,9 @@ if screen == 'Analysis':
         symbol_type = st.radio('type', ["CRYPTO","STOCK"])
         st.write('-' * 40)
 
-    
+        st.subheader('Exchange')
+        exchange_name = st.selectbox('', ['kraken', 'binance', 'coinbase'])
+
         st.subheader('Symbol')
         if "CRYPTO" in symbol_type:
             symbol = st.text_input('format: XXX/XXX', value='BTC/USDT')
@@ -243,6 +252,7 @@ if screen == 'Analysis':
 
         st.write('')
         st.write('')
+        st.title(symbol)
         if "CRYPTO" in symbol_type:
             crypto(symbol, timeframe, limit)
             run_flag=False
