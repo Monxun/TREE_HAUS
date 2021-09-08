@@ -1,11 +1,8 @@
+streamlit
 pandas
-pandas-ta
+numpy
 yfinance
 ccxt
-streamlit
-matplotlib
 plotly
-requests
-streamlit
+pandas-ta
 tweepy
-plotly
