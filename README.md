@@ -11,8 +11,8 @@ Created a financial dashboard to testdrive streamlit's python based dashboard bu
 
 1. Clone the repository:
 ```
-$ git clone git@github.com:shwetanaren/streamlit-financial-dashboard
-$ cd streamlit-financial-dashboard
+$ git clone git@github.com:Monxun/TREE_HAUS.git
+$ cd TREE_HAUS
 ```
 2. Install dependencies:
 ```
